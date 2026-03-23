@@ -3,11 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 /**
  * Edge-compatible HTTP Basic Auth middleware protecting all /admin routes.
  *
- * Credentials are intentionally hardcoded for the MVP phase.
- * TODO: Move to ENV vars (ADMIN_USER / ADMIN_PASS) before production go-live.
+ * Pulls credentials from Vercel Environment Variables.
+ * If unset locally, falls back to "admin" / "travel2026" for ease of development.
  */
-const ADMIN_USER = "admin";
-const ADMIN_PASS = "travel2026";
+const ADMIN_USER = process.env.ADMIN_USER || "admin";
+const ADMIN_PASS = process.env.ADMIN_PASS || "travel2026";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

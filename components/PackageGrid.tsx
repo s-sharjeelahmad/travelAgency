@@ -37,7 +37,8 @@ export default function PackageGrid({ packages }: PackageGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {packages.map((pkg) => {
-        const whatsappUrl = `https://wa.me/923132204483?text=${encodeURIComponent(
+        const phoneNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "923132204483";
+        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
           `Assalam o Alaikum, I want details about ${pkg.title}`
         )}`;
 

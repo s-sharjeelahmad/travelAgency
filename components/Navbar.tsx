@@ -38,7 +38,7 @@ export default function Navbar() {
 
         {/* WhatsApp CTA */}
         <a
-          href="https://wa.me/923132204483"
+          href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}`}
           target="_blank"
           rel="noopener noreferrer"
           className="shrink-0"

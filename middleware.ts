@@ -6,8 +6,8 @@ import { NextRequest, NextResponse } from "next/server";
  * Pulls credentials from Vercel Environment Variables.
  * If unset locally, falls back to "admin" / "travel2026" for ease of development.
  */
-const ADMIN_USER = process.env.ADMIN_USER || "admin";
-const ADMIN_PASS = process.env.ADMIN_PASS || "travel2026";
+const ADMIN_USER = process.env.ADMIN_USERNAME || "admin";
+const ADMIN_PASS = process.env.ADMIN_PASSWORD || "travel2026";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -43,6 +43,6 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Match any path under /admin (including /admin itself)
-  matcher: ["/admin/:path*", "/admin"],
+  // Match any path under /admin or /api/admin
+  matcher: ["/admin/:path*", "/admin", "/api/admin/:path*", "/api/admin"],
 };

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const BROCHURES_BUCKET = "package-brochures";
 
@@ -21,7 +21,7 @@ export async function deletePackageAction(
     : null;
 
   // 1. Delete DB row first
-  const { error: dbError } = await supabase
+  const { error: dbError } = await supabaseAdmin
     .from("packages")
     .delete()
     .eq("id", id);
@@ -32,7 +32,7 @@ export async function deletePackageAction(
 
   // 2. Best-effort purge from Storage
   if (storagePath) {
-    await supabase.storage
+    await supabaseAdmin.storage
       .from(BROCHURES_BUCKET)
       .remove([decodeURIComponent(storagePath)]);
   }
@@ -50,7 +50,7 @@ export async function togglePackageStatusAction(
   id: string,
   currentStatus: boolean
 ): Promise<void> {
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from("packages")
     // @ts-ignore - Supabase type inference has narrowed this to never
     .update({ is_active: !currentStatus })

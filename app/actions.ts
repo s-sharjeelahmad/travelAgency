@@ -2,8 +2,58 @@
 
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import type { PackageCategory } from "@/types/database";
 
 const BROCHURES_BUCKET = "package-brochures";
+
+/**
+ * Server Action: Completely handles the upload and insertion of a new package.
+ * Bypasses RLS by using supabaseAdmin.
+ */
+export async function createPackageAction(formData: FormData): Promise<void> {
+  const title = formData.get("title") as string;
+  const category = formData.get("category") as PackageCategory;
+  const file = formData.get("file") as File;
+
+  if (!title || !category || !file) {
+    throw new Error("Missing required fields for package creation.");
+  }
+
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const uniqueName = `${category}/${crypto.randomUUID()}.${ext}`;
+
+  // 1. Upload the image using the Admin client
+  const { error: uploadError } = await supabaseAdmin.storage
+    .from(BROCHURES_BUCKET)
+    .upload(uniqueName, file, {
+      contentType: file.type || "image/jpeg",
+      upsert: true,
+    });
+
+  if (uploadError) {
+    throw new Error(`Brochure upload failed: ${uploadError.message}`);
+  }
+
+  // 2. Get the public URL
+  const {
+    data: { publicUrl },
+  } = supabaseAdmin.storage.from(BROCHURES_BUCKET).getPublicUrl(uniqueName);
+
+  // 3. Insert the database record using the Admin client
+  const { error: dbError } = await supabaseAdmin
+    .from("packages")
+    // @ts-ignore - Supabase type inference bug with never
+    .insert({ title, category, image_url: publicUrl });
+
+  if (dbError) {
+    // Attempt rollback of the image if DB fails
+    await supabaseAdmin.storage.from(BROCHURES_BUCKET).remove([uniqueName]);
+    throw new Error(`Database insert failed: ${dbError.message}`);
+  }
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+}
 
 /**
  * Server Action: Delete a package row from the DB and its image from Storage.

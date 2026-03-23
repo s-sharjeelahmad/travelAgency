@@ -4,10 +4,7 @@ import { useState, useRef, ChangeEvent, FormEvent } from "react";
 import Image from "next/image";
 import { UploadCloud, FileImage, CheckCircle, AlertCircle, Loader2, X } from "lucide-react";
 import type { PackageCategory } from "@/types/database";
-import {
-  uploadBrochureImage,
-  insertPackage,
-} from "@/services/packageService";
+import { createPackageAction } from "@/app/actions";
 
 type FormStatus = "idle" | "uploading" | "success" | "error";
 
@@ -76,19 +73,16 @@ export default function AddPackagePage() {
       setStatus("uploading");
       setMessage("");
 
-      const ext = file.name.split(".").pop() ?? "jpg";
-      const uniqueName = `${form.category}/${crypto.randomUUID()}.${ext}`;
+      // Package everything into FormData for the Server Action
+      const formData = new FormData();
+      formData.append("title", form.title.trim());
+      formData.append("category", form.category);
+      formData.append("file", file);
 
-      const imageUrl = await uploadBrochureImage(file, uniqueName);
-
-      await insertPackage({
-        title: form.title.trim(),
-        category: form.category,
-        image_url: imageUrl,
-      });
+      await createPackageAction(formData);
 
       setStatus("success");
-      setMessage(`"${form.title}" was uploaded successfully.`);
+      setMessage(`"${form.title}" was successfully listed.`);
       resetForm();
     } catch (err) {
       const errMsg =
